@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search Results — Aura AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --surface: #0b1326;
+    --surface-container: #171f33;
+    --on-surface: #dae2fd;
+    --on-surface-variant: #cbc3d7;
+    --primary: #d0bcff;
+    --primary-container: #a078ff;
+    --on-primary: #3c0091;
+    --secondary: #4cd7f6;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    font-family:'Inter', sans-serif;
+    background: var(--surface);
+    color: var(--on-surface);
+    min-height:100vh;
+  }
+  a{ text-decoration:none; color:inherit; }
+  .container{ max-width:900px; margin:0 auto; padding:0 24px; }
+
+  nav{
+    position:sticky; top:0; z-index:100;
+    background: rgba(6,14,32,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .nav-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 64px;
+  }
+  @media (max-width:900px){ .nav-inner{ padding:16px 20px; } }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    font-weight:700; font-size:18px;
+  }
+  .logo-mark{
+    width:28px; height:28px; border-radius:8px;
+    background:linear-gradient(135deg, var(--primary), var(--secondary));
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+  }
+  .back-link{
+    font-size:13px; color: var(--on-surface-variant);
+    display:flex; align-items:center; gap:6px;
+  }
+  .back-link:hover{ color: var(--on-surface); }
+
+  .results-wrap{ padding:48px 0 100px; }
+  .page-title{ font-size:26px; font-weight:700; margin-bottom:24px; }
+  .results-full-width{ width:100%; max-width:none; padding:0 64px; margin-top:8px; display:block; }
+  @media (max-width:900px){ .results-full-width{ padding:0 20px; } }
+
+  /* Custom search box that re-triggers a search on this page */
+  .search-box-area{
+    display:flex; align-items:center; gap:6px;
+    background: rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:9999px;
+    padding:6px 6px 6px 18px;
+    margin-bottom:28px;
+    max-width:600px;
+  }
+  .search-box-area input{
+    flex:1; background:none; border:none; outline:none;
+    color: var(--on-surface); font-size:14px; font-family:'Inter', sans-serif;
+  }
+  .search-box-area input::placeholder{ color: var(--on-surface-variant); }
+  .search-box-area button{
+    background: var(--primary); border:none; border-radius:9999px;
+    width:34px; height:34px; cursor:pointer; font-size:14px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+
+  #loadingMsg{ color: var(--on-surface-variant); font-size:14px; }
+
+  /* ---------- Google CSE "results only" widget — dark theme ---------- */
+  .gsc-control-cse{
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    font-family: 'Inter', sans-serif !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .gsc-results-wrapper-nooverlay{
+    background: transparent !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .gsc-webResult, .gsc-results, .gsc-resultsRoot, .gsc-expansionArea{
+    width: 100% !important;
+    max-width: none !important;
+  }
+  /* Catch-all: force every Google-generated results div to full width,
+     overriding any fixed pixel widths Google's JS injects inline */
+  div[class^="gsc-"], div[class*=" gsc-"]{
+    max-width: none !important;
+  }
+  .gsc-results-wrapper-nooverlay,
+  .gsc-results-wrapper-visible,
+  .gsc-results-wrapper-overlay,
+  .gsc-control-cse,
+  .gsc-control-cse-en,
+  #___gcse_0,
+  .gcse-searchresults-only,
+  .gsc-resultsRoot,
+  .gsc-webResult,
+  .gsc-expansionArea,
+  .gsc-results{
+    width: 100% !important;
+  }
+  .gsc-result-info, .gsc-orderby-label{ color: var(--on-surface-variant) !important; }
+  .gsc-webResult.gsc-result{
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 0 !important;
+    padding: 18px 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .gsc-webResult.gsc-result:hover{ background: rgba(255,255,255,0.03) !important; }
+  .gs-title, .gs-title *{ color: var(--secondary) !important; text-decoration:none !important; }
+  .gs-visibleUrl, .gsc-url-top .gs-visibleUrl-long, .gsc-url-top .gs-visibleUrl-short{
+    color: var(--on-surface-variant) !important;
+  }
+  .gs-snippet, .gs-snippet *{ color: var(--on-surface) !important; }
+  .gsc-cursor-page{ color: var(--on-surface-variant) !important; }
+  .gsc-cursor-current-page{ color: var(--secondary) !important; }
+  .gcsc-find-more-on-google{ color: var(--primary) !important; }
+  .gsc-adBlock{ display:none !important; }
+  .gs-image-box, .gs-promotion-image-box{ background: transparent !important; }
+
+  /* ---------- Outer results panel (wrapper) — full dark override ---------- */
+  .gsc-results-wrapper-overlay,
+  .gsc-results-wrapper-nooverlay,
+  .gsc-results-wrapper-visible{
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .gsc-resultsHeader, .gsc-tabsArea{
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+  }
+  .gsc-result-info-container, .gsc-result-info{
+    color: var(--on-surface-variant) !important;
+  }
+  /* "Sort by" dropdown */
+  .gsc-selected-option-container, .gsc-option-selector, .gsc-selectbox{
+    background: var(--surface-container) !important;
+    color: var(--on-surface) !important;
+    border-color: rgba(255,255,255,0.15) !important;
+  }
+  .gsc-option-menu-item{ color: var(--on-surface) !important; }
+  .gsc-option-menu{
+    background: var(--surface-container) !important;
+    border-color: rgba(255,255,255,0.15) !important;
+  }
+  /* Close (X) button */
+  .gsc-results-close-btn{
+    background: var(--surface-container) !important;
+    color: var(--on-surface) !important;
+    border-radius: 50% !important;
+  }
+  .gsc-results-close-btn svg, .gsc-results-close-btn path{ fill: var(--on-surface) !important; }
+  /* Kill any leftover light backgrounds Google injects */
+  .gsc-results-wrapper-overlay *:not(.gs-title):not(a){
+    background-color: transparent;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo"><span class="logo-mark">✦</span> Aura AI</a>
+    <a href="index.html" class="back-link">← Back to home</a>
+  </div>
+</nav>
+
+<div class="results-wrap">
+  <div class="container">
+    <div class="page-title">Search results</div>
+
+    <form class="search-box-area" id="resultsSearchForm">
+      <input type="text" id="resultsSearchInput" placeholder="Search the web...">
+      <button type="submit">🔍</button>
+    </form>
+
+    <p id="loadingMsg">Loading results…</p>
+  </div>
+
+  <!-- Google "results only" widget — sits outside .container, so it spans the FULL page width -->
+  <div class="results-full-width">
+    <div class="gcse-searchresults-only" data-gname="resultsonly"></div>
+  </div>
+</div>
+
+<script>
+  function getQueryParam(name){
+    var params = new URLSearchParams(window.location.search);
+    return params.get(name) || '';
+  }
+
+  var initialQuery = getQueryParam('q');
+  document.getElementById('resultsSearchInput').value = initialQuery;
+
+  var resultsElement = null; // set once Google's widget finishes loading
+
+  // Google calls this automatically once cse.js has loaded
+  window.__gcse = {
+    callback: function () {
+      resultsElement = google.search.cse.element.getElement('resultsonly');
+      document.getElementById('loadingMsg').style.display = 'none';
+      if (resultsElement && initialQuery) {
+        resultsElement.execute(initialQuery);
+      }
+    }
+  };
+
+  document.getElementById('resultsSearchForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var q = document.getElementById('resultsSearchInput').value.trim();
+    if (!q) return;
+    window.history.replaceState({}, '', 'results.html?q=' + encodeURIComponent(q));
+    if (resultsElement) {
+      resultsElement.execute(q);
+    } else {
+      document.getElementById('loadingMsg').style.display = 'block';
+      document.getElementById('loadingMsg').textContent = 'Search is still loading, try again in a second…';
+    }
+  });
+</script>
+
+<!-- Google CSE script — must load AFTER window.__gcse is defined above -->
+<script async src="https://cse.google.com/cse.js?cx=331ada0d4a6cd4a07"></script>
+
+</body>
+</html>
